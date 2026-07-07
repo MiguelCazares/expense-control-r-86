@@ -62,7 +62,7 @@ export class ShiftsService {
     if (dateTo) qb.andWhere('shift.date <= :dateTo', { dateTo });
 
     qb.orderBy('shift.date', 'DESC')
-      .addOrderBy('shift.start_time', 'ASC')
+      .addOrderBy('shift.startTime', 'ASC')
       .skip((page - 1) * limit)
       .take(limit);
 
