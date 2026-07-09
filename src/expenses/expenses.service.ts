@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { ExpenseEntity } from './entities/expense.entity';
 import { BusesService } from 'src/buses/buses.service';
+import { CategoriesService } from 'src/categories/categories.service';
 import { ShiftsService } from 'src/shifts/shifts.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
@@ -25,11 +26,16 @@ export class ExpensesService {
     @InjectRepository(ExpenseEntity)
     private readonly expenseRepository: Repository<ExpenseEntity>,
     private readonly busesService: BusesService,
+    private readonly categoriesService: CategoriesService,
     private readonly shiftsService: ShiftsService,
   ) {}
 
   async create(dto: CreateExpenseDto, ownerId: number): Promise<ExpenseEntity> {
     const bus = await this.busesService.findOne(dto.busId, ownerId);
+    const category = await this.categoriesService.findActive(
+      dto.categoryId,
+      ownerId,
+    );
 
     if (dto.shiftId) {
       await this.shiftsService.findOne(dto.shiftId, ownerId);
@@ -39,7 +45,7 @@ export class ExpensesService {
       busId: bus.id,
       date: dto.date,
       amount: dto.amount,
-      category: dto.category,
+      categoryId: category.id,
       description: dto.description,
       shiftId: dto.shiftId,
     });
@@ -50,11 +56,12 @@ export class ExpensesService {
     ownerId: number,
     query: ExpenseQueryDto,
   ): Promise<PaginatedResponseDto<ExpenseEntity>> {
-    const { page = 1, limit = 10, busId, category, dateFrom, dateTo } = query;
+    const { page = 1, limit = 10, busId, categoryId, dateFrom, dateTo } = query;
 
     const qb: SelectQueryBuilder<ExpenseEntity> = this.expenseRepository
       .createQueryBuilder('expense')
       .innerJoin('expense.bus', 'bus')
+      .innerJoinAndSelect('expense.category', 'category')
       .where('bus.owner_id = :ownerId', { ownerId })
       .andWhere('bus.active = true')
       .addSelect(['bus.id', 'bus.plate', 'bus.number', 'bus.route']);
@@ -62,8 +69,8 @@ export class ExpensesService {
     if (busId) {
       qb.andWhere('expense.bus_id = :busId', { busId });
     }
-    if (category) {
-      qb.andWhere('expense.category = :category', { category });
+    if (categoryId) {
+      qb.andWhere('expense.category_id = :categoryId', { categoryId });
     }
     if (dateFrom) {
       qb.andWhere('expense.date >= :dateFrom', { dateFrom });
@@ -83,7 +90,7 @@ export class ExpensesService {
   async findOne(id: number, ownerId: number): Promise<ExpenseEntity> {
     const expense = await this.expenseRepository.findOne({
       where: { id },
-      relations: ['bus'],
+      relations: ['bus', 'category'],
     });
 
     if (!expense) throw new NotFoundException('Expense record not found');
@@ -103,7 +110,20 @@ export class ExpensesService {
       await this.busesService.findOne(dto.busId, ownerId);
     }
 
+    if (dto.shiftId) {
+      await this.shiftsService.findOne(dto.shiftId, ownerId);
+    }
+
     Object.assign(expense, dto);
+
+    if (dto.categoryId && dto.categoryId !== expense.category.id) {
+      // The loaded relation wins over categoryId on save, so replace it too.
+      expense.category = await this.categoriesService.findActive(
+        dto.categoryId,
+        ownerId,
+      );
+    }
+
     return this.expenseRepository.save(expense);
   }
 

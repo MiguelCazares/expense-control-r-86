@@ -1,14 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import {
-  IsDateString,
-  IsEnum,
-  IsInt,
-  IsOptional,
-  IsPositive,
-} from 'class-validator';
+import { IsDateString, IsInt, IsOptional, IsPositive } from 'class-validator';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
-import { ExpenseCategory } from '../enums/expense-category.enum';
 
 export class ExpenseQueryDto extends PaginationQueryDto {
   @ApiPropertyOptional({ example: 1, description: 'Filter by bus ID' })
@@ -18,13 +11,12 @@ export class ExpenseQueryDto extends PaginationQueryDto {
   @IsPositive()
   busId?: number;
 
-  @ApiPropertyOptional({
-    enum: ExpenseCategory,
-    description: 'Filter by category',
-  })
+  @ApiPropertyOptional({ example: 1, description: 'Filter by category ID' })
   @IsOptional()
-  @IsEnum(ExpenseCategory)
-  category?: ExpenseCategory;
+  @Type(() => Number)
+  @IsInt()
+  @IsPositive()
+  categoryId?: number;
 
   @ApiPropertyOptional({ example: '2024-01-01' })
   @IsOptional()

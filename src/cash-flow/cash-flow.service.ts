@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IncomeEntity } from 'src/income/entities/income.entity';
 import { ExpenseEntity } from 'src/expenses/entities/expense.entity';
-import { ExpenseCategory } from 'src/expenses/enums/expense-category.enum';
+import { CategoryColor } from 'src/categories/enums/category-color.enum';
 import { CashFlowQueryDto } from './dto/cash-flow-query.dto';
 
 export interface CashFlowDaily {
@@ -14,7 +14,9 @@ export interface CashFlowDaily {
 }
 
 export interface CashFlowCategoryBreakdown {
-  category: ExpenseCategory;
+  categoryId: number;
+  name: string;
+  color: CategoryColor;
   amount: number;
   count: number;
 }
@@ -61,6 +63,7 @@ export class CashFlowService {
     const expenseQb = this.expenseRepository
       .createQueryBuilder('expense')
       .innerJoin('expense.bus', 'bus')
+      .innerJoinAndSelect('expense.category', 'category')
       .where('bus.owner_id = :ownerId', { ownerId })
       .andWhere('expense.date >= :dateFrom', { dateFrom })
       .andWhere('expense.date <= :dateTo', { dateTo });
@@ -106,25 +109,23 @@ export class CashFlowService {
   private groupByCategory(
     expenseRows: ExpenseEntity[],
   ): CashFlowCategoryBreakdown[] {
-    const byCategory = new Map<
-      ExpenseCategory,
-      { amount: number; count: number }
-    >();
+    const byCategory = new Map<number, CashFlowCategoryBreakdown>();
 
     for (const expense of expenseRows) {
-      const entry = byCategory.get(expense.category) ?? { amount: 0, count: 0 };
+      const { id, name, color } = expense.category;
+      const entry = byCategory.get(id) ?? {
+        categoryId: id,
+        name,
+        color,
+        amount: 0,
+        count: 0,
+      };
       entry.amount += Number(expense.amount);
       entry.count += 1;
-      byCategory.set(expense.category, entry);
+      byCategory.set(id, entry);
     }
 
-    return Array.from(byCategory.entries()).map(
-      ([category, { amount, count }]) => ({
-        category,
-        amount,
-        count,
-      }),
-    );
+    return Array.from(byCategory.values());
   }
 
   private buildDailyBreakdown(

@@ -9,7 +9,7 @@ import {
   Index,
 } from 'typeorm';
 import { BusEntity } from 'src/buses/entities/bus.entity';
-import { ExpenseCategory } from '../enums/expense-category.enum';
+import { CategoryEntity } from 'src/categories/entities/category.entity';
 import { ShiftEntity } from 'src/shifts/entities/shift.entity';
 
 @Entity('expenses')
@@ -23,8 +23,13 @@ export class ExpenseEntity {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   amount: number;
 
-  @Column({ type: 'enum', enum: ExpenseCategory })
-  category: ExpenseCategory;
+  @Index()
+  @ManyToOne(() => CategoryEntity, { nullable: false })
+  @JoinColumn({ name: 'category_id' })
+  category: CategoryEntity;
+
+  @Column({ name: 'category_id' })
+  categoryId: number;
 
   @Column({ type: 'text', nullable: true })
   description: string;
