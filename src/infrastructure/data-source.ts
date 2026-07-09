@@ -2,7 +2,11 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
 import * as dotenv from 'dotenv';
 
-dotenv.config();
+// Mismo criterio que ConfigModule en app.module.ts: sin esto el CLI de TypeORM
+// corre las migraciones contra la base real aunque NODE_ENV sea 'test'.
+dotenv.config({
+  path: process.env.NODE_ENV === 'test' ? '.env.test' : '.env',
+});
 
 export const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
