@@ -242,6 +242,45 @@ Swagger UI: `http://localhost:3000/api/docs`
 
 ---
 
+## Cash Flow 🔐
+
+| Method | Endpoint | Description | Query Params |
+|--------|----------|-------------|--------------|
+| GET | `/cash-flow` | Business-wide income vs expenses for a date range | `?dateFrom` `?dateTo` `?busId` |
+
+### GET `/cash-flow?dateFrom=2026-07-01&dateTo=2026-07-08`
+`dateFrom` and `dateTo` are required (`YYYY-MM-DD`, inclusive). `busId` is optional — omit it to see the whole business, or pass it to scope the same response to a single bus.
+
+```json
+{
+  "status": "success",
+  "data": {
+    "cashFlow": {
+      "dateFrom": "2026-07-01",
+      "dateTo": "2026-07-08",
+      "busId": null,
+      "totalIncome": 1250.00,
+      "totalExpenses": 180.00,
+      "balance": 1070.00,
+      "incomeCount": 1,
+      "expenseCount": 1,
+      "expensesByCategory": [
+        { "category": "fuel", "amount": 180.00, "count": 1 }
+      ],
+      "daily": [
+        { "date": "2026-07-01", "income": 0, "expenses": 0, "balance": 0 },
+        { "date": "2026-07-07", "income": 1250.00, "expenses": 180.00, "balance": 1070.00 }
+      ]
+    }
+  }
+}
+```
+
+> `daily` always includes one row per day in the range, even days with no records (income/expenses default to 0).  
+> Returns `400` if `dateFrom` is after `dateTo`.
+
+---
+
 ## Full Day Flow
 
 ```
@@ -274,4 +313,7 @@ Swagger UI: `http://localhost:3000/api/docs`
 
 11. GET /buses/1/summary?month=2026-04  → monthly summary
     { totalIncome: 48000, totalExpenses: 12300, profit: 35700 }
+
+12. GET /cash-flow?dateFrom=2026-07-01&dateTo=2026-07-08  → weekly cash flow, whole business
+    { totalIncome: 8200, totalExpenses: 2450, balance: 5750 }
 ```

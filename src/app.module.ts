@@ -20,6 +20,7 @@ import { DriversModule } from 'src/drivers/drivers.module';
 import { IncomeModule } from 'src/income/income.module';
 import { ExpensesModule } from 'src/expenses/expenses.module';
 import { ShiftsModule } from 'src/shifts/shifts.module';
+import { CashFlowModule } from 'src/cash-flow/cash-flow.module';
 import * as Joi from 'joi';
 
 @Module({
@@ -54,6 +55,7 @@ import * as Joi from 'joi';
     IncomeModule,
     ExpensesModule,
     ShiftsModule,
+    CashFlowModule,
   ],
   controllers: [AppController],
   providers: [
