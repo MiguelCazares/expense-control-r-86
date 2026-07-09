@@ -46,6 +46,9 @@ lerna-debug.log*
 .temp
 .tmp
 
+# Respaldos de base de datos
+/backups
+
 # Runtime data
 pids
 *.pid
