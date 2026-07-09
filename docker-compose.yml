@@ -1,6 +1,6 @@
 services:
   route-control-db:
-    image: postgres:latest
+    image: postgres:18
     container_name: route-control-db
     ports:
       - '54380:5432'
@@ -12,7 +12,7 @@ services:
       POSTGRES_DB: route_control
 
   route-control-test-db:
-    image: postgres:latest
+    image: postgres:18
     container_name: route-control-test-db
     ports:
       - '54381:5432'
