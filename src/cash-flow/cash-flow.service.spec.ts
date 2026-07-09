@@ -4,19 +4,33 @@ import { BadRequestException } from '@nestjs/common';
 import { CashFlowService } from './cash-flow.service';
 import { IncomeEntity } from 'src/income/entities/income.entity';
 import { ExpenseEntity } from 'src/expenses/entities/expense.entity';
-import { ExpenseCategory } from 'src/expenses/enums/expense-category.enum';
+import { CategoryEntity } from 'src/categories/entities/category.entity';
+import { CategoryColor } from 'src/categories/enums/category-color.enum';
 
 function mockQueryBuilder<T>(rows: T[]) {
   const innerJoin = jest.fn();
+  const innerJoinAndSelect = jest.fn();
   const where = jest.fn();
   const andWhere = jest.fn();
   const getMany = jest.fn().mockResolvedValue(rows);
-  const qb = { innerJoin, where, andWhere, getMany };
+  const qb = { innerJoin, innerJoinAndSelect, where, andWhere, getMany };
   innerJoin.mockReturnValue(qb);
+  innerJoinAndSelect.mockReturnValue(qb);
   where.mockReturnValue(qb);
   andWhere.mockReturnValue(qb);
   return qb;
 }
+
+const fuel = {
+  id: 1,
+  name: 'Combustible',
+  color: CategoryColor.WARNING,
+} as CategoryEntity;
+const maintenance = {
+  id: 2,
+  name: 'Mantenimiento',
+  color: CategoryColor.INFO,
+} as CategoryEntity;
 
 describe('CashFlowService', () => {
   let service: CashFlowService;
@@ -52,13 +66,9 @@ describe('CashFlowService', () => {
       { date: '2026-07-07', amount: 500 },
     ];
     expenseRows = [
-      { date: '2026-07-06', amount: 100, category: ExpenseCategory.FUEL },
-      {
-        date: '2026-07-07',
-        amount: 80,
-        category: ExpenseCategory.MAINTENANCE,
-      },
-      { date: '2026-07-07', amount: 20, category: ExpenseCategory.FUEL },
+      { date: '2026-07-06', amount: 100, category: fuel },
+      { date: '2026-07-07', amount: 80, category: maintenance },
+      { date: '2026-07-07', amount: 20, category: fuel },
     ];
   });
 
@@ -87,8 +97,20 @@ describe('CashFlowService', () => {
 
     expect(result.expensesByCategory).toEqual(
       expect.arrayContaining([
-        { category: ExpenseCategory.FUEL, amount: 120, count: 2 },
-        { category: ExpenseCategory.MAINTENANCE, amount: 80, count: 1 },
+        {
+          categoryId: fuel.id,
+          name: fuel.name,
+          color: fuel.color,
+          amount: 120,
+          count: 2,
+        },
+        {
+          categoryId: maintenance.id,
+          name: maintenance.name,
+          color: maintenance.color,
+          amount: 80,
+          count: 1,
+        },
       ]),
     );
   });

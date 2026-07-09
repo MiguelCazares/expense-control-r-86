@@ -2,7 +2,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsDateString,
-  IsEnum,
   IsInt,
   IsNotEmpty,
   IsNumber,
@@ -11,7 +10,6 @@ import {
   IsString,
   Min,
 } from 'class-validator';
-import { ExpenseCategory } from '../enums/expense-category.enum';
 
 export class CreateExpenseDto {
   @ApiProperty({ example: 1, description: 'Bus ID' })
@@ -31,11 +29,11 @@ export class CreateExpenseDto {
   @Min(0, { message: 'amount must be positive' })
   amount: number;
 
-  @ApiProperty({ enum: ExpenseCategory, example: ExpenseCategory.FUEL })
-  @IsEnum(ExpenseCategory, {
-    message: 'category must be: fuel, maintenance, repair or other',
-  })
-  category: ExpenseCategory;
+  @ApiProperty({ example: 1, description: 'Expense category ID' })
+  @Type(() => Number)
+  @IsInt({ message: 'categoryId must be an integer' })
+  @IsPositive({ message: 'categoryId must be positive' })
+  categoryId: number;
 
   @ApiPropertyOptional({ example: 'Full tank, 80 liters' })
   @IsOptional()

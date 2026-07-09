@@ -73,7 +73,7 @@ export class ShiftsService {
   async findOne(id: number, ownerId: number): Promise<ShiftEntity> {
     const shift = await this.shiftRepository.findOne({
       where: { id },
-      relations: ['driver', 'bus', 'income', 'expenses'],
+      relations: ['driver', 'bus', 'income', 'expenses', 'expenses.category'],
     });
 
     if (!shift) throw new NotFoundException('Shift not found');

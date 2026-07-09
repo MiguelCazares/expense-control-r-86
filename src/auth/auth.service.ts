@@ -2,6 +2,7 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { OwnersService } from 'src/owners/owners.service';
+import { CategoriesService } from 'src/categories/categories.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtPayload } from './strategies/jwt.strategy';
@@ -12,11 +13,13 @@ export class AuthService {
 
   constructor(
     private readonly ownersService: OwnersService,
+    private readonly categoriesService: CategoriesService,
     private readonly jwtService: JwtService,
   ) {}
 
   async register(dto: RegisterDto): Promise<{ accessToken: string }> {
     const owner = await this.ownersService.create(dto);
+    await this.categoriesService.seedDefaults(owner.id);
     const payload: JwtPayload = { sub: owner.id, email: owner.email };
     return { accessToken: this.jwtService.sign(payload) };
   }

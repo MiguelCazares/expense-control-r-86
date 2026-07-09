@@ -214,12 +214,61 @@ Swagger UI: `http://localhost:3000/api/docs`
 
 ---
 
+## Expense Categories 🔐
+
+Each owner has their own set of categories. Registering an account seeds four of them:
+`Combustible` · `Mantenimiento` · `Reparación` · `Otro`.
+
+| Method | Endpoint | Description | Query Params |
+|--------|----------|-------------|--------------|
+| POST | `/categories` | Create an expense category | |
+| GET | `/categories` | List categories | `?page` `?limit` `?search` `?active` |
+| GET | `/categories/:id` | Get a category | |
+| PATCH | `/categories/:id` | Update name, color or active state | |
+| DELETE | `/categories/:id` | Deactivate a category (soft delete) | |
+
+### POST `/categories`
+```json
+{
+  "name": "Peaje",
+  "color": "purple"
+}
+```
+**Response**
+```json
+{
+  "status": "success",
+  "data": {
+    "category": {
+      "id": 5,
+      "name": "Peaje",
+      "slug": "peaje",
+      "color": "purple",
+      "active": true
+    }
+  }
+}
+```
+
+> `color` is optional and defaults to `default`. Available colors:
+> `default` · `success` · `warning` · `danger` · `info` · `purple`  
+> `slug` is derived from `name` (`Revisión Técnica` → `revision-tecnica`) and must be
+> unique per owner — a duplicate name returns `400`.  
+> Pass `?active=true` to list only assignable categories.
+
+### DELETE `/categories/:id`
+Deactivates the category instead of removing it. Expenses already assigned to it keep
+their category and still resolve it on read, but the category can no longer be assigned
+to new expenses. Reactivate it with `PATCH /categories/:id` and `{ "active": true }`.
+
+---
+
 ## Expenses 🔐
 
 | Method | Endpoint | Description | Query Params |
 |--------|----------|-------------|--------------|
 | POST | `/expenses` | Register an expense for a bus | |
-| GET | `/expenses` | List expenses | `?busId` `?category` `?dateFrom` `?dateTo` `?page` `?limit` |
+| GET | `/expenses` | List expenses | `?busId` `?categoryId` `?dateFrom` `?dateTo` `?page` `?limit` |
 | GET | `/expenses/:id` | Get an expense record | |
 | PATCH | `/expenses/:id` | Update an expense record | |
 | DELETE | `/expenses/:id` | Delete an expense record | |
@@ -230,14 +279,32 @@ Swagger UI: `http://localhost:3000/api/docs`
   "busId": 1,
   "date": "2026-04-17",
   "amount": 850.00,
-  "category": "fuel",
+  "categoryId": 1,
   "description": "Full tank, 80 liters",
   "shiftId": 7
 }
 ```
 
+**Response** — the category is embedded on read
+```json
+{
+  "status": "success",
+  "data": {
+    "expense": {
+      "id": 14,
+      "date": "2026-04-17",
+      "amount": 850.00,
+      "categoryId": 1,
+      "category": { "id": 1, "name": "Combustible", "slug": "fuel", "color": "warning", "active": true },
+      "description": "Full tank, 80 liters"
+    }
+  }
+}
+```
+
 > `shiftId` is optional. Use it to link the expense to an open shift.  
-> Available categories: `fuel` · `maintenance` · `repair` · `other`  
+> `categoryId` must belong to the authenticated owner and be active — otherwise `400`.
+> See [Expense Categories](#expense-categories-) to list the available ids.  
 > Multiple expenses per bus per day are allowed.
 
 ---
@@ -265,7 +332,7 @@ Swagger UI: `http://localhost:3000/api/docs`
       "incomeCount": 1,
       "expenseCount": 1,
       "expensesByCategory": [
-        { "category": "fuel", "amount": 180.00, "count": 1 }
+        { "categoryId": 1, "name": "Combustible", "color": "warning", "amount": 180.00, "count": 1 }
       ],
       "daily": [
         { "date": "2026-07-01", "income": 0, "expenses": 0, "balance": 0 },
@@ -291,15 +358,18 @@ Swagger UI: `http://localhost:3000/api/docs`
 3. POST /buses                      → register a bus       { id: 1 }
 4. POST /drivers                    → register a driver    { id: 1 }
 
+   GET /categories                  → the 4 default categories, seeded on register
+   POST /categories                 → optional: add your own  { id: 5, name: "Peaje" }
+
 ── DAILY ─────────────────────────────────────────────
 5. POST /shifts                     → open shift           { id: 7, status: "open" }
    { driverId: 1, busId: 1, date, startTime }
 
 6. POST /expenses                   → log fuel expense
-   { busId: 1, date, amount: 850, category: "fuel", shiftId: 7 }
+   { busId: 1, date, amount: 850, categoryId: 1, shiftId: 7 }
 
 7. POST /expenses                   → log repair expense
-   { busId: 1, date, amount: 200, category: "repair", shiftId: 7 }
+   { busId: 1, date, amount: 200, categoryId: 3, shiftId: 7 }
 
 8. POST /income                     → log daily income
    { busId: 1, date, amount: 3200, shiftId: 7 }

@@ -19,6 +19,7 @@ import { BusesModule } from 'src/buses/buses.module';
 import { DriversModule } from 'src/drivers/drivers.module';
 import { IncomeModule } from 'src/income/income.module';
 import { ExpensesModule } from 'src/expenses/expenses.module';
+import { CategoriesModule } from 'src/categories/categories.module';
 import { ShiftsModule } from 'src/shifts/shifts.module';
 import { CashFlowModule } from 'src/cash-flow/cash-flow.module';
 import * as Joi from 'joi';
@@ -43,7 +44,7 @@ import * as Joi from 'joi';
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
-        limit: 10,
+        limit: 100,
       },
     ]),
     DatabaseModule,
@@ -54,6 +55,7 @@ import * as Joi from 'joi';
     DriversModule,
     IncomeModule,
     ExpensesModule,
+    CategoriesModule,
     ShiftsModule,
     CashFlowModule,
   ],
