@@ -168,10 +168,15 @@ Swagger UI: `http://localhost:3000/api/docs`
 ### PATCH `/shifts/:id` — Close shift
 ```json
 {
-  "endTime": "22:20"
+  "endTime": "22:20",
+  "laps": 12.5
 }
 ```
 **Response** — `status: "closed"` (auto set when endTime is provided)
+
+> `laps` is only accepted on `PATCH` (not on open), for the number of route laps the
+> bus completed. It accepts increments of 0.5 (half laps) and must not be negative —
+> otherwise `400`.
 
 ### GET `/shifts/:id/summary`
 ```json

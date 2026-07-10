@@ -8,6 +8,7 @@ import {
   JoinColumn,
   Index,
   OneToMany,
+  Check,
 } from 'typeorm';
 import { DriverEntity } from 'src/drivers/entities/driver.entity';
 import { BusEntity } from 'src/buses/entities/bus.entity';
@@ -17,6 +18,7 @@ import { ExpenseEntity } from 'src/expenses/entities/expense.entity';
 import { ShiftStatus } from '../enums/shift-status.enum';
 
 @Entity('shifts')
+@Check(`"laps" IS NULL OR ("laps" >= 0 AND "laps" * 2 = FLOOR("laps" * 2))`)
 export class ShiftEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -35,6 +37,9 @@ export class ShiftEntity {
 
   @Column({ type: 'text', nullable: true })
   notes: string;
+
+  @Column({ type: 'decimal', precision: 4, scale: 1, nullable: true })
+  laps: number;
 
   @Index()
   @ManyToOne(() => DriverEntity, { nullable: false })

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   Logger,
@@ -91,6 +92,10 @@ export class ShiftsService {
 
     if (dto.driverId) await this.driversService.findOne(dto.driverId, ownerId);
     if (dto.busId) await this.busesService.findOne(dto.busId, ownerId);
+
+    if (dto.laps !== undefined && dto.laps * 2 !== Math.round(dto.laps * 2)) {
+      throw new BadRequestException('laps must be in increments of 0.5');
+    }
 
     Object.assign(shift, dto);
 
